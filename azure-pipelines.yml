@@ -1,0 +1,38 @@
+name: $(date:yyyyMMdd)$(rev:.r)
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: refs/heads/main
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - checkout: self
+    clean: true
+  - task: Maven@3
+    displayName: Maven pom.xml
+  - task: Docker@0
+    displayName: Build an image
+    inputs:
+      azureSubscriptionEndpoint: a410d99a-01f1-4b48-85f9-841a88031040
+      azureContainerRegistry: '{"loginServer":"mypractice.azurecr.io", "id" : "/subscriptions/d1fa1e7d-96f9-49e2-a42a-ce2af2fcf648/resourceGroups/AKS/providers/Microsoft.ContainerRegistry/registries/mypractice"}'
+      includeLatestTag: true
+  - task: Docker@0
+    displayName: Push an image
+    inputs:
+      azureSubscriptionEndpoint: a410d99a-01f1-4b48-85f9-841a88031040
+      azureContainerRegistry: '{"loginServer":"mypractice.azurecr.io", "id" : "/subscriptions/d1fa1e7d-96f9-49e2-a42a-ce2af2fcf648/resourceGroups/AKS/providers/Microsoft.ContainerRegistry/registries/mypractice"}'
+      action: Push an image
+      includeLatestTag: true
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+    inputs:
+      Contents: aks-deploy-from-acr.yaml
+      TargetFolder: $(build.artifactstagingdirectory)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
+...
+
